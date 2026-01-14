@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  github-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roborio-runner-2026
+    restart: unless-stopped
+    network_mode: bridge
+    dns:
+      - 1.1.1.1
+    environment:
+      # Replace these with your actual values
+      - RUNNER_URL=<repo/org URL>
+      - RUNNER_TOKEN=<runner token>
+      - RUNNER_NAME=roborio-runner-2026
+      - RUNNER_LABELS=roborio,wpilib,2026,self-hosted
+    volumes:
+      # Persist runner configuration and work directory
+      - runner-config:/home/runner/actions-runner
+    # Keep container running
+    tty: true
+
+volumes:
+  runner-config:
+    driver: local
