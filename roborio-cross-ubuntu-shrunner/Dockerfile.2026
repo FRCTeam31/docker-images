@@ -1,8 +1,24 @@
 FROM frcteam31/roborio-cross-ubuntu:2026
 
+# Install Docker for building images in the runner
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    chmod a+r /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create a non-root user for the runner
 RUN useradd -m -s /bin/bash runner && \
-    echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    usermod -aG docker runner
 
 # Switch to runner user
 USER runner

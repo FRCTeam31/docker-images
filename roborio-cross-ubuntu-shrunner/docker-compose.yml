@@ -19,6 +19,8 @@ services:
     volumes:
       # Persist runner configuration and work directory
       - runner-config:/home/runner/actions-runner
+      # Mount Docker socket to allow building Docker images
+      - /var/run/docker.sock:/var/run/docker.sock
     # Keep container running
     tty: true
 
