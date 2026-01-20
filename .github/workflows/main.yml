@@ -9,7 +9,8 @@ concurrency:
 jobs:
   build:
     name: Build WPILib 2026 Images
-    runs-on: self-hosted
+    # runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: make update
