@@ -1,0 +1,18 @@
+ARG UBUNTU=22.04
+ARG TYPE=base
+FROM wpilib/ubuntu-${TYPE}:${UBUNTU}
+
+# Download and install WPILib 2026 to /opt for system-wide access
+RUN wget -q https://packages.wpilib.workers.dev/installer/v2026.2.1/Linux/WPILib_Linux-2026.2.1.tar.gz && \
+    mkdir -p /opt/wpilib/2026 && \
+    tar -xzf WPILib_Linux-2026.2.1.tar.gz -C /opt/wpilib/2026 && \
+    rm WPILib_Linux-2026.2.1.tar.gz
+
+# Set up environment variables for WPILib
+ENV WPILIB_HOME=/opt/wpilib/2026
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Verify Java installation
+RUN java -version
+
+WORKDIR /
