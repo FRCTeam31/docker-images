@@ -32,60 +32,7 @@ RUN mkdir actions-runner && cd actions-runner && \
 
 WORKDIR /home/runner/actions-runner
 
-# Create startup script with .env file generation
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-# Create .env file for the runner to pass variables to jobs\n\
-cat > /home/runner/actions-runner/.env << "EOF"\n\
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64\n\
-WPILIB_HOME=/opt/wpilib/2026\n\
-PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
-EOF\n\
-\n\
-echo "Created .env file with JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"\n\
-\n\
-if [ -z "$RUNNER_TOKEN" ] || [ -z "$RUNNER_URL" ]; then\n\
-    echo "Error: RUNNER_TOKEN and RUNNER_URL environment variables must be set"\n\
-    exit 1\n\
-fi\n\
-\n\
-# Remove old configuration if it exists\n\
-if [ -f ".runner" ]; then\n\
-    echo "Removing old runner configuration..."\n\
-    ./config.sh remove --token "$RUNNER_TOKEN" || true\n\
-    rm -f .runner .credentials .credentials_rsaparams\n\
-fi\n\
-\n\
-# Configure the runner with retry logic\n\
-echo "Configuring GitHub Actions runner..."\n\
-MAX_RETRIES=5\n\
-RETRY_COUNT=0\n\
-\n\
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do\n\
-    if ./config.sh --url "$RUNNER_URL" --token "$RUNNER_TOKEN" --name "${RUNNER_NAME:-roborio-runner-2026}" --work _work --labels "${RUNNER_LABELS:-roborio,wpilib,2026}" --unattended --replace; then\n\
-        echo "Runner configured successfully!"\n\
-        break\n\
-    else\n\
-        RETRY_COUNT=$((RETRY_COUNT + 1))\n\
-        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then\n\
-            echo "Configuration failed. Retrying in 10 seconds... (Attempt $RETRY_COUNT/$MAX_RETRIES)"\n\
-            sleep 10\n\
-        else\n\
-            echo "Failed to configure runner after $MAX_RETRIES attempts."\n\
-            echo "Please check:"\n\
-            echo "  1. Your RUNNER_TOKEN is valid (tokens expire after 1 hour)"\n\
-            echo "  2. Your RUNNER_URL is correct"\n\
-            echo "  3. Your network connection to GitHub is working"\n\
-            exit 1\n\
-        fi\n\
-    fi\n\
-done\n\
-\n\
-# Start the runner\n\
-echo "Starting GitHub Actions runner..."\n\
-echo "JAVA_HOME is set to: /usr/lib/jvm/java-17-openjdk-amd64"\n\
-./run.sh' > /home/runner/actions-runner/start.sh && \
-    chmod +x /home/runner/actions-runner/start.sh
+# Copy startup script
+COPY --chown=runner:runner --chmod=755 start.sh /home/runner/actions-runner/start.sh
 
 CMD ["/home/runner/actions-runner/start.sh"]
