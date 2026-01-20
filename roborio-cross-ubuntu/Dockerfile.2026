@@ -6,10 +6,12 @@ FROM wpilib/ubuntu-${TYPE}:${UBUNTU}
 RUN wget -q https://packages.wpilib.workers.dev/installer/v2026.2.1/Linux/WPILib_Linux-2026.2.1.tar.gz && \
     mkdir -p /opt/wpilib/2026 && \
     tar -xzf WPILib_Linux-2026.2.1.tar.gz -C /opt/wpilib/2026 && \
+    rm WPILib_Linux-2026.2.1-artifacts.tar.gz && \
     cd /opt/wpilib/2026/WPILib_Linux-2026.2.1 && \
     tar -xzf WPILib_Linux-2026.2.1-artifacts.tar.gz -C /opt/wpilib/2026 && \
-    cd / && \
-    rm WPILib_Linux-2026.2.1.tar.gz
+    rm WPILib_Linux-2026.2.1.tar.gz && \
+    cd /
+    
 
 # Set up environment variables for WPILib
 ENV WPILIB_HOME=/opt/wpilib/2026
