@@ -1,4 +1,4 @@
-DOCKER_USER?=FRCTeam31
+DOCKER_USER?=frcteam31
 
 .PHONY: usage update build push
 
