@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Fix Docker socket permissions - the socket from host may have different group
+if [ -S /var/run/docker.sock ]; then
+    # Make the socket accessible to the runner user
+    sudo chmod 666 /var/run/docker.sock
+fi
+
 # Create .env file for the runner to pass variables to jobs
 cat > /home/runner/actions-runner/.env << "EOF"
 JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
