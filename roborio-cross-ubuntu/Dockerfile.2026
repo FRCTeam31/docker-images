@@ -1,8 +1,9 @@
 ARG UBUNTU=24.04
 ARG TYPE=base
-FROM wpilib/ubuntu-${TYPE}:${UBUNTU}
 
-# Download and install WPILib 2026 (optimized: stream extraction, exclude unnecessary files)
+# Stage 1: Download and extract WPILib
+FROM wpilib/ubuntu-${TYPE}:${UBUNTU} AS wpilib-extractor
+
 RUN mkdir -p /opt/wpilib/2026 && \
     cd /opt/wpilib/2026 && \
     wget -qO- https://packages.wpilib.workers.dev/installer/v2026.2.1/Linux/WPILib_Linux-2026.2.1.tar.gz | \
@@ -15,13 +16,46 @@ RUN mkdir -p /opt/wpilib/2026 && \
         --exclude='*/tools/SysId*' \
         --exclude='*/tools/SmartDashboard*' \
         --exclude='*/tools/shuffleboard*' \
-        --exclude='*/examples' && \
+        --exclude='*/tools/roborioteamnumbersetter*' \
+        --exclude='*/examples' \
+        --exclude='*/installUtils' && \
     tar -xzf WPILib_Linux-2026.2.1-artifacts.tar.gz && \
-    rm WPILib_Linux-2026.2.1-artifacts.tar.gz && \
-    find /opt/wpilib/2026 -type f -name '*.exe' -delete && \
-    find /opt/wpilib/2026 -type f -name '*.bat' -delete && \
-    cd /
-    
+    rm WPILib_Linux-2026.2.1-artifacts.tar.gz
+
+# Aggressive cleanup in extraction stage - remove unnecessary components
+RUN cd /opt/wpilib/2026 && \
+    # Remove large unnecessary directories
+    rm -rf ./documentation && \
+    rm -rf ./advantagescope && \
+    rm -rf ./installUtils && \
+    rm -rf ./WPILibInstaller && \
+    rm -rf ./elastic && \
+    rm -rf ./examples && \
+    # Remove GUI tools from tools directory
+    rm -rf ./tools/Glass* ./tools/OutlineViewer* ./tools/PathWeaver* && \
+    rm -rf ./tools/RobotBuilder* ./tools/SysId* ./tools/SmartDashboard* && \
+    rm -rf ./tools/shuffleboard* ./tools/roborioteamnumbersetter* && \
+    rm -rf ./tools/java ./jdk ./toolchains/download && \
+    # Remove platform-specific files
+    find . -type f \( -name '*.exe' -o -name '*.bat' -o -name '*.cmd' -o -name '*.dll' \) -delete && \
+    find . -type d -name 'osx*' -exec rm -rf {} + 2>/dev/null || true && \
+    find . -type d -name 'windows*' -exec rm -rf {} + 2>/dev/null || true && \
+    find . -type d -name 'macos*' -exec rm -rf {} + 2>/dev/null || true && \
+    # Remove source and javadoc JARs
+    find . -type f -name '*-sources.jar' -delete && \
+    find . -type f -name '*-javadoc.jar' -delete && \
+    # Remove Maven metadata to save space
+    find ./maven -type f -name '*.pom' -delete 2>/dev/null || true && \
+    find ./maven -type f \( -name '*.md5' -o -name '*.sha1' -o -name '*.sha256' -o -name '*.sha512' -o -name '*.asc' \) -delete 2>/dev/null || true && \
+    find ./maven -type f -name '*.module' -delete 2>/dev/null || true && \
+    # Remove installer artifacts and resources
+    rm -f ./WPILibInstaller_Linux-*.zip ./lib*.so 2>/dev/null || true
+
+# Stage 2: Final minimal image with only essentials
+FROM wpilib/ubuntu-${TYPE}:${UBUNTU}
+
+# Copy only essential WPILib components
+COPY --from=wpilib-extractor /opt/wpilib/2026 /opt/wpilib/2026
 
 # Set up environment variables for WPILib
 ENV WPILIB_HOME=/opt/wpilib/2026
