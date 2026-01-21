@@ -2,14 +2,24 @@ ARG UBUNTU=24.04
 ARG TYPE=base
 FROM wpilib/ubuntu-${TYPE}:${UBUNTU}
 
-# Download and install WPILib 2026 to /opt for system-wide access
-RUN wget -q https://packages.wpilib.workers.dev/installer/v2026.2.1/Linux/WPILib_Linux-2026.2.1.tar.gz && \
-    mkdir -p /opt/wpilib/2026 && \
-    tar -xzf WPILib_Linux-2026.2.1.tar.gz -C /opt/wpilib/2026 && \
-    rm WPILib_Linux-2026.2.1.tar.gz && \
-    cd /opt/wpilib/2026/WPILib_Linux-2026.2.1 && \
-    tar -xzf WPILib_Linux-2026.2.1-artifacts.tar.gz -C /opt/wpilib/2026 && \
+# Download and install WPILib 2026 (optimized: stream extraction, exclude unnecessary files)
+RUN mkdir -p /opt/wpilib/2026 && \
+    cd /opt/wpilib/2026 && \
+    wget -qO- https://packages.wpilib.workers.dev/installer/v2026.2.1/Linux/WPILib_Linux-2026.2.1.tar.gz | \
+    tar -xz --strip-components=1 \
+        --exclude='*/documentation' \
+        --exclude='*/tools/Glass*' \
+        --exclude='*/tools/OutlineViewer*' \
+        --exclude='*/tools/PathWeaver*' \
+        --exclude='*/tools/RobotBuilder*' \
+        --exclude='*/tools/SysId*' \
+        --exclude='*/tools/SmartDashboard*' \
+        --exclude='*/tools/shuffleboard*' \
+        --exclude='*/examples' && \
+    tar -xzf WPILib_Linux-2026.2.1-artifacts.tar.gz && \
     rm WPILib_Linux-2026.2.1-artifacts.tar.gz && \
+    find /opt/wpilib/2026 -type f -name '*.exe' -delete && \
+    find /opt/wpilib/2026 -type f -name '*.bat' -delete && \
     cd /
     
 
